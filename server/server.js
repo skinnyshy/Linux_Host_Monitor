@@ -251,7 +251,8 @@ app.get('/api/ping/:ip', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Monitor Server running on ${PORT}`));
+// app.listen(PORT, () => console.log(`Monitor Server running on ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Monitor Server running on 0.0.0.0:${PORT}`));
 
 setInterval(() => {
     const now = Date.now();
