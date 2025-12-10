@@ -97,14 +97,6 @@ const [hosts, setHosts] = useState([
 ]);
 ```
 
-#### 2.3. 修改后端服务器配置
-
-在 `server/server.js` 中，需要实现真实的SSH连接功能。当前代码中已有SSH连接的框架，但为了安全起见，需要按以下方式启用：
-
-1. 解开 `server/server.js` 中SSH连接部分的注释
-2. 修改getSystemMetricsViaSSH函数，从安全存储中获取SSH配置
-3. 在实际使用时，建议使用环境变量或安全的配置管理工具来存储SSH凭据
-
 ### 3. 运行项目
 
 1. 启动后端服务（端口5001）：
