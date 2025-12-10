@@ -2,6 +2,8 @@
 
 一个基于React的Linux主机监控平台，可以监控主机的连通性和系统指标。
 
+![Snipaste_2025-12-10_20-25-55](https://raw.githubusercontent.com/skinnyshy/PicGo/master/202512102026827.jpg)
+
 ## 功能特性
 
 - 主机列表管理
