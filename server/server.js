@@ -38,7 +38,12 @@ function getSSHConfig(ip) {
       port: sshConfig.port || 22,
       username: sshConfig.username,
       password: sshConfig.password,
-      privateKey: sshConfig.privateKey ? require('fs').readFileSync(sshConfig.privateKey) : undefined
+      privateKey: sshConfig.privateKey ? require('fs').readFileSync(sshConfig.privateKey) : undefined,
+      // SSH Keep-Alive配置
+      keepaliveInterval: 30000,  // 每30秒发送一次keepalive消息
+      keepaliveCountMax: 3,      // 最大keepalive未响应次数
+      readyTimeout: 15000,       // 连接超时时间
+      tryKeyboard: true          // 尝试键盘交互认证
     };
   } catch (error) {
     console.error('读取SSH配置失败:', error.message);
@@ -61,40 +66,6 @@ async function establishLongConnection(ip, sshConfig) {
         lastActivity: Date.now(),
         isActive: true
       });
-      
-      // 设置心跳，保持连接活跃
-      const heartbeat = setInterval(() => {
-        const connection = connectionPool.get(ip);
-        if (connection && activeMonitors.has(ip)) {
-          // 检查连接是否仍然ready
-          if (connection.client && connection.client.readyState === 'normal') {
-            connection.client.exec('echo "ping"', (err) => {
-              if (err) {
-                console.log(`心跳检测失败，尝试重连: ${ip}`);
-                reconnectSSH(ip, sshConfig);
-              } else {
-                const updatedConnection = connectionPool.get(ip);
-                if (updatedConnection) {
-                  updatedConnection.lastActivity = Date.now();
-                }
-              }
-            });
-          } else {
-            // 连接状态异常，尝试重连
-            console.log(`连接状态异常，尝试重连: ${ip}`);
-            clearInterval(heartbeat);
-            reconnectSSH(ip, sshConfig);
-          }
-        } else {
-          // 如果不再监控该主机，清理连接
-          clearInterval(heartbeat);
-          const connection = connectionPool.get(ip);
-          if (connection) {
-            connection.client.end();
-            connectionPool.delete(ip);
-          }
-        }
-      }, 30000); // 每30秒发送一次心跳
 
       resolve(conn);
     }).on('error', (err) => {
@@ -104,14 +75,12 @@ async function establishLongConnection(ip, sshConfig) {
       console.log(`SSH连接到 ${ip} 已断开`);
       const connection = connectionPool.get(ip);
       if (connection) {
-        clearInterval(connection.heartbeat); // 清理心跳定时器
         connectionPool.delete(ip);
       }
     }).on('close', (had_error) => {
       console.log(`SSH连接到 ${ip} 已关闭 (had_error: ${had_error})`);
       const connection = connectionPool.get(ip);
       if (connection) {
-        clearInterval(connection.heartbeat); // 清理心跳定时器
         connectionPool.delete(ip);
       }
       if (had_error) {
