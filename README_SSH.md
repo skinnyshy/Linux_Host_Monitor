@@ -36,7 +36,9 @@
 
 ### 2. 前端配置修改
 
-在 `src/App.jsx` 文件中，将需要SSH监控的服务器的 `sshConnected` 属性设置为 `true`：
+在 `src/App.jsx` 文件中，~~将需要SSH监控的服务器的 `sshConnected` 属性设置为 `true`~~：
+
+新版本代码将ssh监控开关添加在前端，这部分操作不需要设置为true
 
 ```javascript
 const [hosts, setHosts] = useState([

@@ -119,6 +119,119 @@ const [hosts, setHosts] = useState([
 
 3. 打开浏览器访问 http://localhost:3000
 
+#### 2.5 部署到服务器
+
+部署到服务器需要修改前端package.json中的监听配置，将react-scripts启动方式加上监听网卡
+
+```shell
+# 端开发服务器 (3000端口)
+# 前端的3000端口是通过react-scripts启动的，需要修改package.json中的启动命令：
+
+# 在package.json中：
+{
+   "scripts": {
+     "start": "HOST=0.0.0.0 react-scripts start"
+   }
+ }
+
+# 或者，如果你使用的是Windows系统：
+{
+  "scripts": {
+    "start": "set HOST=0.0.0.0 && react-scripts start"
+  }
+}
+```
+
+后端默认监听在ipv6的5001端口，可以不修改，也可以按照下面的方式修改监听网卡
+
+```shell
+#后端服务器 (5001端口)
+# server.js中的监听部分需要修改：
+// 当前代码是：
+app.listen(PORT, () => console.log(`Monitor Server running on ${PORT}`));
+
+// 应该改为：
+app.listen(PORT, '0.0.0.0', () => console.log(`Monitor Server running on 0.0.0.0:${PORT}`));
+
+```
+
+最重要的是api配置，这个文件直接决定你打开浏览器访问3000端口时是从哪个api接口获取的数据，若保持127.0.0.1则代表从打开浏览器的主机上获取数据，自然是获取不到的，会报错。修改服务器上的`src/services/api.js`的代码，将其修改为真实地址，我这里使用的是内网穿透地址
+
+```shell
+// src/services/api.js
+class ApiService {
+  // Ping主机
+  static async pingHost(ip) {
+    try {
+      const response = await fetch(`http://10.126.126.26:5001/api/ping/${ip}`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Ping请求失败:', error);
+      return { status: 'error', latency: null, message: error.message };
+    }
+  }
+
+  // 获取系统指标
+  static async getSystemMetrics(ip) {
+    try {
+      const response = await fetch(`http://10.126.126.26:5001/api/metrics/${ip}`);
+      const data = await response.json();
+      
+      // 确保返回的数据结构正确
+      if (data.error) {
+        console.warn('获取系统指标时服务器返回错误:', data.message);
+        // 即使服务器返回错误，也要返回正确的数据结构
+        return {
+          cpu: 0,
+          memory: 0,
+          uptime: '获取失败',
+          disk: {
+            usage: '0%'
+          }
+        };
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('获取系统指标失败:', error);
+      // 不返回随机模拟数据，而是返回默认的错误状态
+      return {
+        cpu: 0,
+        memory: 0,
+        uptime: '连接失败',
+        disk: {
+          usage: '0%'
+        }
+      };
+    }
+  }
+
+  // 切换SSH监控状态
+  static async toggleSSHMonitor(ip, enable) {
+    try {
+      const response = await fetch('http://10.126.126.26:5001/api/toggle-ssh-monitor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ip, enable }),
+      });
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('切换SSH监控失败:', error);
+      return { success: false, message: error.message };
+    }
+  }
+}
+
+export default ApiService;
+```
+
+
+
 ## 安全注意事项
 
 当前版本使用模拟数据进行演示。如果要在生产环境中使用真实监控功能，请务必：

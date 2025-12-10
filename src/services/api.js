@@ -3,7 +3,7 @@ class ApiService {
   // Ping主机
   static async pingHost(ip) {
     try {
-      const response = await fetch(`http://localhost:5001/api/ping/${ip}`);
+      const response = await fetch(`http://127.0.0.1:5001/api/ping/${ip}`);
       const data = await response.json();
       return data;
     } catch (error) {
@@ -15,7 +15,7 @@ class ApiService {
   // 获取系统指标
   static async getSystemMetrics(ip) {
     try {
-      const response = await fetch(`http://localhost:5001/api/metrics/${ip}`);
+      const response = await fetch(`http://127.0.0.1:5001/api/metrics/${ip}`);
       const data = await response.json();
       
       // 确保返回的数据结构正确
@@ -50,7 +50,7 @@ class ApiService {
   // 切换SSH监控状态
   static async toggleSSHMonitor(ip, enable) {
     try {
-      const response = await fetch('http://localhost:5001/api/toggle-ssh-monitor', {
+      const response = await fetch('http://127.0.0.1:5001/api/toggle-ssh-monitor', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
