@@ -64,20 +64,33 @@ async function establishLongConnection(ip, sshConfig) {
       
       // 设置心跳，保持连接活跃
       const heartbeat = setInterval(() => {
-        if (conn && activeMonitors.has(ip)) {
-          conn.exec('echo "ping"', (err) => {
-            if (err) {
-              console.log(`心跳检测失败，尝试重连: ${ip}`);
-              reconnectSSH(ip, sshConfig);
-            } else {
-              connectionPool.get(ip).lastActivity = Date.now();
-            }
-          });
+        const connection = connectionPool.get(ip);
+        if (connection && activeMonitors.has(ip)) {
+          // 检查连接是否仍然ready
+          if (connection.client && connection.client.readyState === 'normal') {
+            connection.client.exec('echo "ping"', (err) => {
+              if (err) {
+                console.log(`心跳检测失败，尝试重连: ${ip}`);
+                reconnectSSH(ip, sshConfig);
+              } else {
+                const updatedConnection = connectionPool.get(ip);
+                if (updatedConnection) {
+                  updatedConnection.lastActivity = Date.now();
+                }
+              }
+            });
+          } else {
+            // 连接状态异常，尝试重连
+            console.log(`连接状态异常，尝试重连: ${ip}`);
+            clearInterval(heartbeat);
+            reconnectSSH(ip, sshConfig);
+          }
         } else {
           // 如果不再监控该主机，清理连接
           clearInterval(heartbeat);
-          if (connectionPool.has(ip)) {
-            connectionPool.get(ip).client.end();
+          const connection = connectionPool.get(ip);
+          if (connection) {
+            connection.client.end();
             connectionPool.delete(ip);
           }
         }
@@ -89,10 +102,18 @@ async function establishLongConnection(ip, sshConfig) {
       reject(err);
     }).on('end', () => {
       console.log(`SSH连接到 ${ip} 已断开`);
-      if (connectionPool.has(ip)) {
+      const connection = connectionPool.get(ip);
+      if (connection) {
+        clearInterval(connection.heartbeat); // 清理心跳定时器
         connectionPool.delete(ip);
       }
     }).on('close', (had_error) => {
+      console.log(`SSH连接到 ${ip} 已关闭 (had_error: ${had_error})`);
+      const connection = connectionPool.get(ip);
+      if (connection) {
+        clearInterval(connection.heartbeat); // 清理心跳定时器
+        connectionPool.delete(ip);
+      }
       if (had_error) {
         console.log(`SSH连接到 ${ip} 异常关闭，尝试重连...`);
         setTimeout(() => reconnectSSH(ip, sshConfig), 5000);
@@ -121,12 +142,23 @@ async function reconnectSSH(ip, sshConfig) {
 async function getSSHConnection(ip, sshConfig) {
   let connection = connectionPool.get(ip);
   
-  if (connection && connection.isActive && connection.client) {
+  // 检查连接是否存在且处于就绪状态
+  if (connection && connection.client && connection.client.readyState === 'normal') {
     connection.lastActivity = Date.now();
     return connection.client;
   }
   
-  // 如果没有活跃连接，建立新连接
+  // 如果连接无效，先清理旧连接
+  if (connection) {
+    try {
+      connection.client.end();
+    } catch (e) {
+      console.log(`清理无效连接时出错: ${ip}`, e.message);
+    }
+    connectionPool.delete(ip);
+  }
+  
+  // 建立新连接
   return await establishLongConnection(ip, sshConfig);
 }
 
