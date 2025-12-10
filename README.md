@@ -4,6 +4,8 @@
 
 ![Snipaste_2025-12-10_20-25-55](https://raw.githubusercontent.com/skinnyshy/PicGo/master/202512102026827.jpg)
 
+![Snipaste_2025-12-10_20-28-44](https://raw.githubusercontent.com/skinnyshy/PicGo/master/202512102028622.jpg)
+
 ## 功能特性
 
 - 主机列表管理
