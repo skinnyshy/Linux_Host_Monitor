@@ -58,7 +58,7 @@ class ApiService {
   // 切换SSH监控状态
   static async toggleSSHMonitor(ip, enable) {
     try {
-      const response = fetch(`${API_BASE_URL}/api/toggle-ssh-monitor`, {
+      const response = await fetch(`${API_BASE_URL}/api/toggle-ssh-monitor`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
