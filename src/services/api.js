@@ -27,7 +27,8 @@ class ApiService {
           memory: 0,
           uptime: '获取失败',
           disk: {
-            usage: '0%'
+            usage: '0%',
+            inode: '0%'
           }
         };
       }
@@ -41,7 +42,8 @@ class ApiService {
         memory: 0,
         uptime: '连接失败',
         disk: {
-          usage: '0%'
+          usage: '0%',
+          inode: '0%'
         }
       };
     }

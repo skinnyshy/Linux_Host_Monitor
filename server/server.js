@@ -146,13 +146,15 @@ async function getSystemMetricsViaSSH(ip, sshConfig) {
 
   const cmdUptime = 'uptime -p 2>/dev/null || uptime';
   const cmdDisk = 'df -h | grep -E "/$" | awk \'{print $5}\' | head -1';
+  const cmdInode = 'df -i | grep -E "/$" | awk \'{print $5}\' | head -1';
 
   // 使用 allSettled 容错
   const results = await Promise.allSettled([
       execCommand(conn, cmdCpu),
       execCommand(conn, cmdMem),
       execCommand(conn, cmdUptime),
-      execCommand(conn, cmdDisk)
+      execCommand(conn, cmdDisk),
+      execCommand(conn, cmdInode)
   ]);
 
   const allFailed = results.every(r => r.status === 'rejected');
@@ -173,12 +175,13 @@ async function getSystemMetricsViaSSH(ip, sshConfig) {
   const memRaw = getVal(1, '0');
   const uptimeRaw = getVal(2, 'unknown');
   const diskRaw = getVal(3, '0%');
+  const inodeRaw = getVal(4, '0%');
 
   const cpu = parseFloat(cpuRaw.match(/(\d+\.?\d*)/)?.[1] || 0);
   const memory = parseFloat(memRaw.match(/(\d+\.?\d*)/)?.[1] || 0);
-  
+
   console.log(`📊 数据 ${ip}: CPU=${cpu}%, Mem=${memory}%`);
-  return { cpu, memory, uptime: uptimeRaw, disk: { usage: diskRaw } };
+  return { cpu, memory, uptime: uptimeRaw, disk: { usage: diskRaw, inode: inodeRaw } };
 }
 
 app.get('/api/metrics/:ip', async (req, res) => {
@@ -199,10 +202,10 @@ app.get('/api/metrics/:ip', async (req, res) => {
     metricsCache.set(ip, { data: metrics, timestamp: Date.now() });
     res.json(metrics);
   } catch (error) {
-    res.status(500).json({ 
-      error: '获取失败', 
+    res.status(500).json({
+      error: '获取失败',
       message: error.message,
-      ...metricsCache.get(ip)?.data || { cpu: 0, memory: 0, uptime: 'N/A', disk: { usage: '0%' } }
+      ...metricsCache.get(ip)?.data || { cpu: 0, memory: 0, uptime: 'N/A', disk: { usage: '0%', inode: '0%' } }
     });
   }
 });

@@ -88,6 +88,7 @@ const SystemMetrics = ({ host }) => {
           <div className="info-content">
             <p><strong>开机时间:</strong> {metrics.uptime}</p>
             <p><strong>磁盘使用率:</strong> {metrics.disk.usage}</p>
+            <p><strong>inode使用率:</strong> {metrics.disk.inode || 'N/A'}</p>
           </div>
         </div>
       </div>

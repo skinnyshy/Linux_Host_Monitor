@@ -17,16 +17,19 @@
 ## 安装步骤
 
 1. 安装依赖：
+   
    ```bash
    npm install
    ```
 
 2. 启动后端服务器：
+   
    ```bash
    npm run server
    ```
 
 3. 启动前端开发服务器：
+   
    ```bash
    npm start
    ```
@@ -47,6 +50,7 @@ const [hosts, setHosts] = useState([
 ```
 
 例如：
+
 ```javascript
 const [hosts, setHosts] = useState([
   { id: 1, name: '阿里云服务器', ip: '123.123.123.123', sshConnected: false },
@@ -104,11 +108,13 @@ const [hosts, setHosts] = useState([
 ### 3. 运行项目
 
 1. 启动后端服务（端口5001）：
+   
    ```bash
    npm run server
    ```
 
 2. 在另一个终端启动前端（端口3000）：
+   
    ```bash
    npm start
    ```
@@ -148,7 +154,6 @@ app.listen(PORT, () => console.log(`Monitor Server running on ${PORT}`));
 
 // 应该改为：
 app.listen(PORT, '0.0.0.0', () => console.log(`Monitor Server running on 0.0.0.0:${PORT}`));
-
 ```
 
 最重要的是api配置，这个文件直接决定你打开浏览器访问3000端口时是从哪个api接口获取的数据，若保持127.0.0.1则代表从打开浏览器的主机上获取数据，自然是获取不到的，会报错。修改服务器上的`src/services/api.js`的代码，将其修改为真实地址，我这里使用的是内网穿透地址
@@ -173,7 +178,7 @@ class ApiService {
     try {
       const response = await fetch(`http://10.126.126.26:5001/api/metrics/${ip}`);
       const data = await response.json();
-      
+
       // 确保返回的数据结构正确
       if (data.error) {
         console.warn('获取系统指标时服务器返回错误:', data.message);
@@ -187,7 +192,7 @@ class ApiService {
           }
         };
       }
-      
+
       return data;
     } catch (error) {
       console.error('获取系统指标失败:', error);
@@ -213,7 +218,7 @@ class ApiService {
         },
         body: JSON.stringify({ ip, enable }),
       });
-      
+
       const data = await response.json();
       return data;
     } catch (error) {
@@ -225,8 +230,6 @@ class ApiService {
 
 export default ApiService;
 ```
-
-
 
 ## 安全注意事项
 
