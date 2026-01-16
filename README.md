@@ -156,80 +156,31 @@ app.listen(PORT, () => console.log(`Monitor Server running on ${PORT}`));
 app.listen(PORT, '0.0.0.0', () => console.log(`Monitor Server running on 0.0.0.0:${PORT}`));
 ```
 
-最重要的是api配置，这个文件直接决定你打开浏览器访问3000端口时是从哪个api接口获取的数据，若保持127.0.0.1则代表从打开浏览器的主机上获取数据，自然是获取不到的，会报错。修改服务器上的`src/services/api.js`的代码，将其修改为真实地址，我这里使用的是内网穿透地址
+**API地址配置（重要）**
 
-```shell
-// src/services/api.js
-class ApiService {
-  // Ping主机
-  static async pingHost(ip) {
-    try {
-      const response = await fetch(`http://10.126.126.26:5001/api/ping/${ip}`);
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Ping请求失败:', error);
-      return { status: 'error', latency: null, message: error.message };
-    }
-  }
+前端使用环境变量配置API地址，支持灵活部署。在项目根目录创建 `.env` 文件：
 
-  // 获取系统指标
-  static async getSystemMetrics(ip) {
-    try {
-      const response = await fetch(`http://10.126.126.26:5001/api/metrics/${ip}`);
-      const data = await response.json();
-
-      // 确保返回的数据结构正确
-      if (data.error) {
-        console.warn('获取系统指标时服务器返回错误:', data.message);
-        // 即使服务器返回错误，也要返回正确的数据结构
-        return {
-          cpu: 0,
-          memory: 0,
-          uptime: '获取失败',
-          disk: {
-            usage: '0%'
-          }
-        };
-      }
-
-      return data;
-    } catch (error) {
-      console.error('获取系统指标失败:', error);
-      // 不返回随机模拟数据，而是返回默认的错误状态
-      return {
-        cpu: 0,
-        memory: 0,
-        uptime: '连接失败',
-        disk: {
-          usage: '0%'
-        }
-      };
-    }
-  }
-
-  // 切换SSH监控状态
-  static async toggleSSHMonitor(ip, enable) {
-    try {
-      const response = await fetch('http://10.126.126.26:5001/api/toggle-ssh-monitor', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ip, enable }),
-      });
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('切换SSH监控失败:', error);
-      return { success: false, message: error.message };
-    }
-  }
-}
-
-export default ApiService;
+```bash
+# 复制示例配置文件
+cp .env.example .env
 ```
+
+根据部署场景编辑 `.env` 文件：
+
+```bash
+# 场景1: 本地开发（前后端同机器）
+REACT_APP_API_BASE_URL=http://localhost:5001
+
+# 场景2: 部署到服务器（前后端在同一域名）
+# 留空则使用相对路径，自动使用当前访问的域名
+REACT_APP_API_BASE_URL=
+
+# 场景3: 跨域访问（后端在不同地址）
+# 设置为实际的后端服务器地址
+REACT_APP_API_BASE_URL=http://10.126.126.26:5001
+```
+
+> 注意：修改 `.env` 文件后需要重启前端服务才能生效。
 
 ## 安全注意事项
 

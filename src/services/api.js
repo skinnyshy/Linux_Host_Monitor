@@ -1,9 +1,15 @@
 // src/services/api.js
+
+// API 基础地址配置，支持环境变量
+// 本地开发: 使用 .env 配置或默认值为空（自动使用当前域名）
+// 部署时: 设置 REACT_APP_API_BASE_URL 为实际后端地址
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+
 class ApiService {
   // Ping主机
   static async pingHost(ip) {
     try {
-      const response = await fetch(`http://127.0.0.1:5001/api/ping/${ip}`);
+      const response = await fetch(`${API_BASE_URL}/api/ping/${ip}`);
       const data = await response.json();
       return data;
     } catch (error) {
@@ -15,7 +21,7 @@ class ApiService {
   // 获取系统指标
   static async getSystemMetrics(ip) {
     try {
-      const response = await fetch(`http://127.0.0.1:5001/api/metrics/${ip}`);
+      const response = await fetch(`${API_BASE_URL}/api/metrics/${ip}`);
       const data = await response.json();
       
       // 确保返回的数据结构正确
@@ -52,7 +58,7 @@ class ApiService {
   // 切换SSH监控状态
   static async toggleSSHMonitor(ip, enable) {
     try {
-      const response = await fetch('http://127.0.0.1:5001/api/toggle-ssh-monitor', {
+      const response = fetch(`${API_BASE_URL}/api/toggle-ssh-monitor`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
