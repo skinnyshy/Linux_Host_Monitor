@@ -13,7 +13,8 @@ function App() {
     { id: 4, name: 'vps_usa', ip: '10.126.126.4', sshConnected: false }, // 默认关闭SSH监控
     { id: 5, name: '华为云', ip: '10.126.126.3', sshConnected: false }, // 默认关闭SSH监控
     { id: 6, name: 'NUC8i', ip: '10.126.126.6', sshConnected: false }, // 默认关闭SSH监控
-    { id: 7, name: '玩客云主机', ip: '192.168.6.163', sshConnected: false } // 默认关闭SSH监控
+    { id: 7, name: '玩客云主机', ip: '192.168.6.163', sshConnected: false }, // 默认关闭SSH监控
+    { id: 8, name: '美国vps-2026', ip: '10.126.126.27', sshConnected: false } // 默认关闭SSH监控
     
   ]);
   const [selectedHost, setSelectedHost] = useState(null);
